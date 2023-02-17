@@ -14,3 +14,4 @@ yarn-error.log*
 /public/color.less
 *.zip
 .history/
+public/

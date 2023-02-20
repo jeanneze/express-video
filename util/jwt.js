@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
-const { uuid } = require('../config/config.default')
+const { uuid } = require('../config/config.default');
 const toJwt = promisify(jwt.sign);
 const verify = promisify(jwt.verify);
 // 生成token
@@ -19,18 +19,23 @@ module.exports.createToken = async (userInfo) => {
   });
 };
 
-module.exports.verifyToken = async (req, res, next) => {
-//    console.log(req.headers.authorization)
-   let token = req.headers.authorization;
-   token = token ? token.split('Bearer ')[1] : null;
-   if (!token) {
-      res.status(402).json({ error: '请传入token' })
-   }
-   try {
-     const userInfo = await verify(token, uuid)
-     req.user = userInfo
-   } catch(err) {
-     res.status(402).json({ error: '无效的token' })
-   }
-   next()
-}
+module.exports.verifyToken = function (required = true) {
+  return async (req, res, next) => {
+    //    console.log(req.headers.authorization)
+    let token = req.headers.authorization;
+    token = token ? token.split('Bearer ')[1] : null;
+    if (token) {
+      try {
+        const userInfo = await verify(token, uuid);
+        req.user = userInfo;
+      } catch (err) {
+        res.status(402).json({ error: '无效的token' });
+      }
+      next();
+    } else if (required) {
+        res.status(402).json({ error: '请传入token' });
+    } else {
+      next()
+    }
+  };
+};
